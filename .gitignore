@@ -1,0 +1,9 @@
+.vscode/
+.srv/*
+!.srv/custom.ini
+plugins/*
+themes/*
+mu-plugins/*
+!/plugins/products-ordering/
+!/themes/products-ordering/
+!/mu-plugins/products-ordering/
