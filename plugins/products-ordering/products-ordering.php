@@ -12,6 +12,10 @@ Text Domain: products-ordering
 
 namespace ProductsOrdering;
 
+use ProductsOrdering\Constants\PluginConstants;
+use ProductsOrdering\Controllers\AdminController;
+use ProductsOrdering\Views\AdminPageView;
+
 if (!defined("ABSPATH")) {
     exit;
 }
@@ -34,6 +38,9 @@ spl_autoload_register(function (string $class) {
 
 class ProductsOrderingPlugin
 {
+    private readonly AdminController $admin_controller;
+
+    private readonly AdminPageView $admin_page_view;
 
     public function activate(): void
     {
@@ -55,6 +62,20 @@ class ProductsOrderingPlugin
         $this->register_hooks();
     }
 
+    public function add_settings_page(): void
+    {
+        $title = __(PluginConstants::TITLE, PluginConstants::DOMAIN);
+        add_menu_page(
+            $title,
+            $title,
+            PluginConstants::ACCESS,
+            PluginConstants::SLUG,
+            [$this->admin_controller, "render_admin_page"],
+            'dashicons-admin-generic',
+            25
+        );
+    }
+
     private function init_parsers(): void
     {
 
@@ -72,17 +93,17 @@ class ProductsOrderingPlugin
 
     private function init_views(): void
     {
-
+        $this->admin_page_view = new AdminPageView();
     }
 
     private function init_controllers(): void
     {
-
+        $this->admin_controller = new AdminController($this->admin_page_view);
     }
 
     private function register_hooks(): void
     {
-
+        add_action("admin_menu", [$this, 'add_settings_page']);
     }
 }
 
