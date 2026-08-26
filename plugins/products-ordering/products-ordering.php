@@ -12,9 +12,11 @@ Text Domain: products-ordering
 
 namespace ProductsOrdering;
 
-use ProductsOrdering\Constants\PluginConstants;
-use ProductsOrdering\Controllers\AdminController;
-use ProductsOrdering\Views\AdminPageView;
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+use ProductsOrdering\Controllers\OrderingController;
+use ProductsOrdering\Repositories\OrderingRepository;
+use ProductsOrdering\Views\OrderColumnView;
+use ProductsOrdering\Views\OrderMetaboxView;
 
 if (!defined("ABSPATH")) {
     exit;
@@ -38,9 +40,15 @@ spl_autoload_register(function (string $class) {
 
 class ProductsOrderingPlugin
 {
-    private readonly AdminController $admin_controller;
+    private readonly OrderingController $ordering_controller;
 
-    private readonly AdminPageView $admin_page_view;
+    private readonly OrderColumnView $order_column_view;
+
+    private readonly OrderMetaboxView $order_metabox_view;
+
+    private readonly OrderingRepository $ordering_repository;
+
+    private bool $isHpos = false;
 
     public function activate(): void
     {
@@ -62,20 +70,6 @@ class ProductsOrderingPlugin
         $this->register_hooks();
     }
 
-    public function add_settings_page(): void
-    {
-        $title = __(PluginConstants::TITLE, PluginConstants::DOMAIN);
-        add_menu_page(
-            $title,
-            $title,
-            PluginConstants::ACCESS,
-            PluginConstants::SLUG,
-            [$this->admin_controller, "render_admin_page"],
-            'dashicons-admin-generic',
-            25
-        );
-    }
-
     private function init_parsers(): void
     {
 
@@ -83,7 +77,7 @@ class ProductsOrderingPlugin
 
     private function init_repositories(): void
     {
-
+        $this->ordering_repository = new OrderingRepository();
     }
 
     private function init_services(): void
@@ -93,20 +87,36 @@ class ProductsOrderingPlugin
 
     private function init_views(): void
     {
-        $this->admin_page_view = new AdminPageView();
+        $this->order_column_view = new OrderColumnView();
+        $this->order_metabox_view = new OrderMetaboxView();
     }
 
     private function init_controllers(): void
     {
-        $this->admin_controller = new AdminController($this->admin_page_view);
+        $this->ordering_controller = new OrderingController($this->order_column_view, $this->order_metabox_view);
     }
 
     private function register_hooks(): void
     {
-        add_action("admin_menu", [$this, 'add_settings_page']);
+        add_action("add_meta_boxes", [$this->ordering_controller, 'add_metabox']);
+        add_filter("manage_edit-product_columns", [$this->ordering_repository, 'create_sort_field']);
+        add_action('manage_product_posts_custom_column', [$this->ordering_controller, 'render_order_column_content'], 20, 2 );
+        add_filter( 'manage_edit-product_sortable_columns', [$this->ordering_controller, 'make_custom_order_column_sortable']);
+        add_action( 'pre_get_posts', [$this->ordering_controller, 'sort_products_by_custom_order_column']);
+        add_filter('woocommerce_shop_order_list_table_columns', [$this->ordering_repository, 'create_sort_field'], 20);
+        add_action('woocommerce_shop_order_list_table_custom_column', [$this->ordering_controller, 'render_order_column_content'], 10, 2);
+        add_filter('woocommerce_shop_order_list_table_sortable_columns', [$this->ordering_controller, 'make_custom_order_column_sortable'], 20);
     }
 }
 
 $plugin = new ProductsOrderingPlugin();
 register_activation_hook(__FILE__, [$plugin, 'activate']);
 register_deactivation_hook(__FILE__, [$plugin, 'deactivate']);
+// // Додайте в конструктор
+// add_action('init', function() {
+//     if (class_exists('Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController')) {
+//         $controller = wc_get_container()->get(CustomOrdersTableController::class);
+//         $is_hpos = $controller->custom_orders_table_usage_is_enabled();
+//         die('=== HPOS enabled: ' . ($is_hpos ? 'YES' : 'NO') . ' ===');
+//     }
+// });
