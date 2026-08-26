@@ -16,4 +16,8 @@ class PluginConstants
     public const ORDER_SLUG = "_custom_order";
 
     public const ORDER_METABOX_SLUG = self::ORDER_SLUG."_meta_box";
+
+    public const RATING_SLUG = 'rating';
+
+    public const RATING_TITLE = 'Рейтинг';
 }

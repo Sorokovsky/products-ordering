@@ -28,6 +28,7 @@ class OrderingController
             $result[$key] = $value;
         }
         $result[PluginConstants::ORDER_SLUG] = __(PluginConstants::ORDER_TITLE, PluginConstants::DOMAIN);
+        $result[PluginConstants::RATING_SLUG] = __(PluginConstants::RATING_TITLE, PluginConstants::DOMAIN);
         return $result;
     }
 
@@ -36,6 +37,18 @@ class OrderingController
         if ($column === PluginConstants::ORDER_SLUG) {
             $value = get_post_meta($product_id, PluginConstants::ORDER_METABOX_SLUG, true);
             $this->order_content_view->render($value);
+        }
+        if ($column === PluginConstants::RATING_SLUG) {
+            $product = wc_get_product($product_id);
+            $average = $product->get_average_rating();
+            $rating_count = $product->get_rating_count();
+        
+        if ($average > 0) {
+            echo \wc_get_rating_html($average);
+            echo ' <span style="color:#999;font-size:11px;">(' . esc_html($rating_count) . ')</span>';
+        } else {
+            echo '<span style="color:#ccc;">0</span>';
+        }
         }
     }
 
