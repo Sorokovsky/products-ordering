@@ -84,6 +84,9 @@ class OrderingController
 
     public function order_products_by_meta(WP_Query $query)
     {
+        if (!$query->is_single() && !$query->is_search()) {
+            return;
+        }
         if (!is_admin() && $query->get('post_type') === 'product') {
          $order_meta_key = PluginConstants::ORDER_METABOX_SLUG;
         add_filter('posts_orderby', function($orderby, $wp_query) use ($query, $order_meta_key) {
