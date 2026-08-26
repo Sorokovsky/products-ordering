@@ -76,7 +76,7 @@ class OrderingController
         return $columns;
     }
 
-    public function make_order_column_sortable($columns)
+    public function make_order_column_sortable(array $columns)
     {
         $columns[PluginConstants::ORDER_SLUG] = PluginConstants::ORDER_METABOX_SLUG;
         return $columns;
