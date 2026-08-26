@@ -2,8 +2,10 @@
 
 namespace ProductsOrdering\Views;
 
+use ProductsOrdering\Models\OrderModel;
+
 /**
- * @implements View<string>
+ * @implements View<OrderModel>
  */
 class OrderColumnContentView implements View
 {
@@ -11,15 +13,21 @@ class OrderColumnContentView implements View
     {
     }
 
-    public function render($value): void
+    public function render($model): void
     {
+        $value = $model->get_order();
+        $product_id = $model->get_product_id();
         ob_start();
-        if (!empty($value) || $value === '0') {
-            echo esc_html($value);
-        } else {
-            echo '-';
-        }
         ?>
+        <span>
+            <input type="number" 
+            class="order-input" 
+            data-product-id="<?php echo esc_attr($product_id); ?>" 
+            value="<?php echo esc_attr($value); ?>" 
+            style="width:60px;text-align:center;" 
+            min="0" 
+            step="1">
+            </span>
         <style>
             th {
                 width: 100px;

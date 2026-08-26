@@ -3,18 +3,19 @@
 namespace ProductsOrdering\Controllers;
 
 use ProductsOrdering\Constants\PluginConstants;
+use ProductsOrdering\Models\OrderModel;
 use ProductsOrdering\Views\View;
 use WP_Query;
 
 class OrderingController
 {
     /**
-     * @var View<string>
+     * @var View<OrderModel>
      */
     private readonly View $order_content_view;
 
     /**
-     * @param View<string> $order_content_view
+     * @param View<OrderModel> $order_content_view
      */
     public function __construct(View $order_content_view)
     {
@@ -36,18 +37,7 @@ class OrderingController
     {
         if ($column === PluginConstants::ORDER_SLUG) {
             $value = get_post_meta($product_id, PluginConstants::ORDER_METABOX_SLUG, true);
-            
-            ?>
-            <span>
-            <input type="number" 
-            class="order-input" 
-            data-product-id="<?php echo esc_attr($product_id); ?>" 
-            value="<?php echo esc_attr($value); ?>" 
-            style="width:60px;text-align:center;" 
-            min="0" 
-            step="1">;
-            </span>
-            <?php
+            $this->order_content_view->render(new OrderModel($value, $product_id));
         }
         if ($column === PluginConstants::RATING_SLUG) {
             $product = wc_get_product($product_id);
@@ -94,9 +84,40 @@ class OrderingController
 
     public function order_products_by_meta(WP_Query $query)
     {
-        if (!is_admin() || !$query->is_main_query()) {
-            return;
-        }
+        if (!is_admin() && $query->get('post_type') === 'product') {
+         $order_meta_key = PluginConstants::ORDER_METABOX_SLUG;
+        add_filter('posts_orderby', function($orderby, $wp_query) use ($query, $order_meta_key) {
+            if ($wp_query !== $query) {
+                return $orderby;
+            }
+            
+            global $wpdb;
+            $orderby = $wpdb->prepare(
+                "
+                COALESCE(
+                    (SELECT meta_value 
+                     FROM {$wpdb->postmeta} 
+                     WHERE post_id = {$wpdb->posts}.ID 
+                     AND meta_key = %s 
+                     LIMIT 1), 
+                    '999'
+                ) ASC,
+                COALESCE(
+                    (SELECT meta_value 
+                     FROM {$wpdb->postmeta} 
+                     WHERE post_id = {$wpdb->posts}.ID 
+                     AND meta_key = '_wc_average_rating' 
+                     LIMIT 1), 
+                    '0'
+                ) DESC
+                ",
+                $order_meta_key
+            );
+            
+            return $orderby;
+        }, 10, 2);
+        return;
+    }
 
         $orderby = $query->get('orderby');
         if ($orderby === PluginConstants::ORDER_METABOX_SLUG) {

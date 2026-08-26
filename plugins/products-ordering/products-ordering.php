@@ -14,6 +14,7 @@ namespace ProductsOrdering;
 
 use ProductsOrdering\Controllers\OrderEditorController;
 use ProductsOrdering\Controllers\OrderingController;
+use ProductsOrdering\Models\OrderModel;
 use ProductsOrdering\Views\OrderColumnContentView;
 use ProductsOrdering\Views\View;
 
@@ -43,7 +44,7 @@ class ProductsOrderingPlugin
     private readonly OrderEditorController $order_editor_controller;
 
     /**
-     * @var View<string>
+     * @var View<OrderModel>
      */
     private readonly View $order_content_view;
 
