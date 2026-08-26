@@ -12,6 +12,7 @@ Text Domain: products-ordering
 
 namespace ProductsOrdering;
 
+use ProductsOrdering\Controllers\OrderEditorController;
 use ProductsOrdering\Controllers\OrderingController;
 use ProductsOrdering\Views\OrderColumnContentView;
 use ProductsOrdering\Views\View;
@@ -39,6 +40,8 @@ spl_autoload_register(function (string $class) {
 class ProductsOrderingPlugin
 {
     private readonly OrderingController $ordering_controller;
+    private readonly OrderEditorController $order_editor_controller;
+
     /**
      * @var View<string>
      */
@@ -86,6 +89,7 @@ class ProductsOrderingPlugin
     private function init_controllers(): void
     {
         $this->ordering_controller = new OrderingController($this->order_content_view);
+        $this->order_editor_controller = new OrderEditorController();
     }
 
     private function register_hooks(): void
@@ -93,8 +97,10 @@ class ProductsOrderingPlugin
         add_filter('manage_edit-product_columns', [$this->ordering_controller, 'add_order_column'], 10, 1);
         add_action('manage_product_posts_custom_column', [$this->ordering_controller, 'display_order_content'], 10, 2);
         add_filter('manage_edit-product_sortable_columns', [$this->ordering_controller, 'make_order_column_editable']);
-        add_filter('manage_edit-product_sortable_columns', [$this->ordering_controller, 'make_order_column_sortable']);
+        add_filter('manage_edit-product_sortable_columns', [$this->ordering_controller, 'make_columns_sortable']);
         add_action('pre_get_posts', [$this->ordering_controller, 'order_products_by_meta']);
+        add_action('wp_ajax_save_order_value', [$this->order_editor_controller, 'save_order_ajax']);
+        add_action('admin_footer', [$this->order_editor_controller, 'admin_footer_js']);
     }
 }
 

@@ -36,18 +36,27 @@ class OrderingController
     {
         if ($column === PluginConstants::ORDER_SLUG) {
             $value = get_post_meta($product_id, PluginConstants::ORDER_METABOX_SLUG, true);
-            $this->order_content_view->render($value);
+            
+            ?>
+            <span>
+            <input type="number" 
+            class="order-input" 
+            data-product-id="<?php echo esc_attr($product_id); ?>" 
+            value="<?php echo esc_attr($value); ?>" 
+            style="width:60px;text-align:center;" 
+            min="0" 
+            step="1">;
+            </span>
+            <?php
         }
         if ($column === PluginConstants::RATING_SLUG) {
             $product = wc_get_product($product_id);
             $average = $product->get_average_rating();
-            $rating_count = $product->get_rating_count();
         
         if ($average > 0) {
-            echo \wc_get_rating_html($average);
-            echo ' <span style="color:#999;font-size:11px;">(' . esc_html($rating_count) . ')</span>';
+            echo ' <span>'. esc_html($average) .'</span>';
         } else {
-            echo '<span style="color:#ccc;">0</span>';
+            echo '<span>0</span>';
         }
         }
     }
@@ -76,9 +85,10 @@ class OrderingController
         return $columns;
     }
 
-    public function make_order_column_sortable(array $columns)
+    public function make_columns_sortable(array $columns)
     {
         $columns[PluginConstants::ORDER_SLUG] = PluginConstants::ORDER_METABOX_SLUG;
+        $columns[PluginConstants::RATING_SLUG] = PluginConstants::RATING_SLUG;
         return $columns;
     }
 
@@ -91,6 +101,10 @@ class OrderingController
         $orderby = $query->get('orderby');
         if ($orderby === PluginConstants::ORDER_METABOX_SLUG) {
             $query->set('meta_key', PluginConstants::ORDER_METABOX_SLUG);
+            $query->set('orderby', 'meta_value_num');
+        }
+        if ($orderby === PluginConstants::RATING_SLUG) {
+            $query->set('meta_key', '_wc_average_rating');
             $query->set('orderby', 'meta_value_num');
         }
     }
