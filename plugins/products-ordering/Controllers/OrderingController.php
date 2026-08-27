@@ -36,8 +36,8 @@ class OrderingController
     public function display_order_content(string $column, int $product_id): void
     {
         if ($column === PluginConstants::ORDER_SLUG) {
-            $value = get_post_meta($product_id, PluginConstants::ORDER_METABOX_SLUG, true);
-            $this->order_content_view->render(new OrderModel($value, $product_id));
+            $value = get_post_meta($product_id, PluginConstants::ORDER_METABOX_SLUG, true) ?? '0';
+            $this->order_content_view->render(new OrderModel(intval($value), $product_id));
         }
         if ($column === PluginConstants::RATING_SLUG) {
             $product = wc_get_product($product_id);
