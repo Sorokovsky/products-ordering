@@ -99,6 +99,14 @@ class OrderingController
                 (SELECT meta_value 
                  FROM {$wpdb->postmeta} 
                  WHERE post_id = {$wpdb->posts}.ID 
+                 AND meta_key = '_wc_average_rating' 
+                 LIMIT 1), 
+                '0'
+            ) DESC,
+            COALESCE(
+                (SELECT meta_value 
+                 FROM {$wpdb->postmeta} 
+                 WHERE post_id = {$wpdb->posts}.ID 
                  AND meta_key = %s 
                  LIMIT 1), 
                 '999'
