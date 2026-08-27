@@ -109,7 +109,7 @@ class OrderingController
                  WHERE post_id = {$wpdb->posts}.ID 
                  AND meta_key = %s 
                  LIMIT 1), 
-                '999'
+                '0'
             ) ASC,
             {$wpdb->posts}.post_title ASC
             ",
