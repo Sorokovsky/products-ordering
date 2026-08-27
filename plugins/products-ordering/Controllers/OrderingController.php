@@ -84,43 +84,34 @@ class OrderingController
 
     public function order_products_by_meta(WP_Query $query)
     {
-        if (!$query->is_single() && !$query->is_search()) {
-            return;
-        }
-        if (!is_admin() && $query->get('post_type') === 'product') {
-         $order_meta_key = PluginConstants::ORDER_METABOX_SLUG;
-        add_filter('posts_orderby', function($orderby, $wp_query) use ($query, $order_meta_key) {
-            if ($wp_query !== $query) {
-                return $orderby;
-            }
-            
-            global $wpdb;
-            $orderby = $wpdb->prepare(
-                "
-                COALESCE(
-                    (SELECT meta_value 
-                     FROM {$wpdb->postmeta} 
-                     WHERE post_id = {$wpdb->posts}.ID 
-                     AND meta_key = %s 
-                     LIMIT 1), 
-                    '999'
-                ) ASC,
-                COALESCE(
-                    (SELECT meta_value 
-                     FROM {$wpdb->postmeta} 
-                     WHERE post_id = {$wpdb->posts}.ID 
-                     AND meta_key = '_wc_average_rating' 
-                     LIMIT 1), 
-                    '0'
-                ) DESC
-                ",
-                $order_meta_key
-            );
-            
+        if (!\is_admin() && $query->get('post_type') === 'product') {
+    $order_meta_key = PluginConstants::ORDER_METABOX_SLUG;
+    
+    add_filter('posts_orderby', function($orderby, $wp_query) use ($query, $order_meta_key) {
+        if ($wp_query !== $query) {
             return $orderby;
-        }, 10, 2);
-        return;
-    }
+        }
+        
+        global $wpdb;
+        $orderby = $wpdb->prepare(
+            "
+            COALESCE(
+                (SELECT meta_value 
+                 FROM {$wpdb->postmeta} 
+                 WHERE post_id = {$wpdb->posts}.ID 
+                 AND meta_key = %s 
+                 LIMIT 1), 
+                '999'
+            ) ASC,
+            {$wpdb->posts}.post_title ASC
+            ",
+            $order_meta_key
+        );
+        
+        return $orderby;
+    }, 10, 2);
+    return;
+}
 
         $orderby = $query->get('orderby');
         if ($orderby === PluginConstants::ORDER_METABOX_SLUG) {
